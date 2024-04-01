@@ -1,10 +1,8 @@
 package com.jackson.usercenter.service.impl;
 
-import java.util.Date;
-
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.jackson.usercenter.model.User;
+import com.jackson.usercenter.model.domain.User;
 import com.jackson.usercenter.service.UserService;
 import com.jackson.usercenter.mapper.UserMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import java.security.MessageDigest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

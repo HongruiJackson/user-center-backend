@@ -1,6 +1,6 @@
 package com.jackson.usercenter.service;
 
-import com.jackson.usercenter.model.User;
+import com.jackson.usercenter.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
