@@ -1,4 +1,5 @@
 package com.jackson.usercenter.service.impl;
+
 import java.util.Date;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -12,21 +13,24 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import java.security.MessageDigest;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
-* @author JacksonZHR
-* @description 针对表【user(用户表)】的数据库操作Service实现
-* @createDate 2024-04-01 10:08:57
-*/
+ * @author JacksonZHR
+ * @description 针对表【user(用户表)】的数据库操作Service实现
+ * @createDate 2024-04-01 10:08:57
+ */
 @Slf4j
 @Service
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
-    implements UserService{
+        implements UserService {
 
-    final String SALT = "dwoiwxnl[qzr34,mx102xb=1";
+    static final String SALT = "dwoiwxnl[qzr34,mx102xb=1";
+
+    static final String USER_LOGIN_STATE = "userLoginState";
 
     @Resource
     private UserMapper userMapper;
@@ -67,7 +71,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         //2. 密码加密
         String encryptedPassword = DigestUtils.sha256Hex(SALT + userPassword);
-        System.out.println(encryptedPassword);
 
         //3. 插入数据
         User user = new User();
@@ -78,6 +81,58 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
 
         return user.getId();
+    }
+
+    @Override
+    public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+        //1. 校验
+        //1.1 非空校验
+        if (StringUtils.isAnyBlank(userAccount, userPassword))
+            return null;
+        //1.2 业务逻辑： 登录的账户不小于4位、
+        if (userAccount.length() < 4)
+            return null;
+        //1.3 业务逻辑： 登录的密码不小于8位
+        if (userPassword.length() < 8)
+            return null;
+
+        //1.4 账户不包含特殊字符
+        String regEx = "[ _`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]|\n|\r|\t";
+        Pattern pattern = Pattern.compile(regEx);
+        Matcher matcher = pattern.matcher(userAccount);
+        if (matcher.find()) {
+            log.info("包含特殊符号");
+            return null;
+        }
+
+        //2. 密码加密
+        String encryptedPassword = DigestUtils.sha256Hex(SALT + userPassword);
+
+        //3. 查询用户
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_account", userAccount).eq("user_password", encryptedPassword);
+        User user = userMapper.selectOne(queryWrapper);
+        //3.1 若用户不存在
+        if (user == null) {
+            log.info("login failed, user is not exited or wrong password");
+            return null;
+        }
+
+        //4. 用户脱敏
+        User anonymizedUser = new User();
+        anonymizedUser.setId(user.getId());
+        anonymizedUser.setUserAccount(user.getUserAccount());
+        anonymizedUser.setUsername(user.getUsername());
+        anonymizedUser.setAvatarUrl(user.getAvatarUrl());
+        anonymizedUser.setGender(user.getGender());
+        anonymizedUser.setPhone(user.getPhone());
+        anonymizedUser.setEmail(user.getEmail());
+        anonymizedUser.setUserStatus(user.getUserStatus());
+
+        //5. 记录用户的登录态
+        request.getSession().setAttribute(USER_LOGIN_STATE, anonymizedUser);
+
+        return anonymizedUser;
     }
 }
 
