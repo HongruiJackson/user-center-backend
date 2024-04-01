@@ -4,6 +4,7 @@ import com.jackson.usercenter.model.domain.User;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author JacksonZHR
@@ -32,4 +33,17 @@ public interface UserService extends IService<User> {
      */
     User userLogin(String userAccount, String userPassword, HttpServletRequest request);
 
+    /**
+     * 根据用户账号进行查询用户
+     * @param userAccount 用户账号
+     * @return 用户list
+     */
+    List<User> searchUsers(String userAccount);
+
+    /**
+     * 根据用户id删除用户
+     * @param id 用户id
+     * @return 删除情况
+     */
+    boolean deleteUserById(long id);
 }

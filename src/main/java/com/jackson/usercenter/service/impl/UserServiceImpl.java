@@ -12,8 +12,11 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.jackson.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 
 /**
  * @author JacksonZHR
@@ -27,7 +30,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     static final String SALT = "dwoiwxnl[qzr34,mx102xb=1";
 
-    static final String USER_LOGIN_STATE = "userLoginState";
+
 
     @Resource
     private UserMapper userMapper;
@@ -125,11 +128,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         anonymizedUser.setPhone(user.getPhone());
         anonymizedUser.setEmail(user.getEmail());
         anonymizedUser.setUserStatus(user.getUserStatus());
+        anonymizedUser.setUserRole(user.getUserRole());
 
         //5. 记录用户的登录态
         request.getSession().setAttribute(USER_LOGIN_STATE, anonymizedUser);
 
         return anonymizedUser;
+    }
+
+    @Override
+    public List<User> searchUsers(String userAccount) {
+
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.like("user_account", userAccount);
+        return userMapper.selectList(queryWrapper);
+
+    }
+
+    @Override
+    public boolean deleteUserById(long id) {
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("id", id);
+        int delete = userMapper.delete(queryWrapper);
+        return delete == 1;
     }
 }
 
