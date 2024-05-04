@@ -15,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.jackson.usercenter.constant.UserConstant.USER_LOGIN_STATE;
 
@@ -141,7 +142,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.like("user_account", userAccount);
-        return userMapper.selectList(queryWrapper);
+        List<User> userList = userMapper.selectList(queryWrapper);
+        return userList.stream().peek(user -> user.setUserPassword(null)).toList();
 
     }
 
