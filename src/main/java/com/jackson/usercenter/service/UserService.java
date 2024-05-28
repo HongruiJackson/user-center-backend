@@ -15,7 +15,7 @@ public interface UserService extends IService<User> {
 
 
     /**
-     * 用户登录
+     * 用户注册
      * @param userAccount 用户账号
      * @param userPassword 用户密码
      * @param checkPassword 用户二次确认的校验密码
