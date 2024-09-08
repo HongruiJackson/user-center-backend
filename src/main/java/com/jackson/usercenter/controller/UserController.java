@@ -1,5 +1,7 @@
 package com.jackson.usercenter.controller;
 
+import com.jackson.usercenter.common.BaseResponse;
+import com.jackson.usercenter.enums.ResponseEnum;
 import com.jackson.usercenter.model.domain.User;
 import com.jackson.usercenter.model.request.UserLoginRequest;
 import com.jackson.usercenter.model.request.UserRegisterRequest;
@@ -28,7 +30,7 @@ public class UserController {
      * @return 注册情况
      */
     @PostMapping("/register")
-    public Long userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
+    public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
         if (userRegisterRequest == null) return null;
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
@@ -36,7 +38,8 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
             return null;
         }
-        return userService.userRegister(userAccount, userPassword, checkPassword);
+        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        return new BaseResponse<>(result, ResponseEnum.COMMON_SUCCESS);
     }
 
     /**
@@ -46,14 +49,16 @@ public class UserController {
      * @return 用户脱敏信息
      */
     @PostMapping("/login")
-    public User userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest httpServletRequest) {
+    public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest httpServletRequest) {
         if (userLoginRequest == null) return null;
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             return null;
         }
-        return userService.userLogin(userAccount, userPassword, httpServletRequest);
+        User user = userService.userLogin(userAccount, userPassword, httpServletRequest);
+        return new BaseResponse<>(user, ResponseEnum.COMMON_SUCCESS);
+
     }
 
     /**
@@ -63,9 +68,10 @@ public class UserController {
      * @return 无效值
      */
     @PostMapping("/logOUt")
-    public Integer userLogOut(HttpServletRequest httpServletRequest) {
+    public BaseResponse<Integer> userLogOut(HttpServletRequest httpServletRequest) {
         if (httpServletRequest == null) return null;
-        return userService.userLogout(httpServletRequest);
+        Integer i = userService.userLogout(httpServletRequest);
+        return new BaseResponse<>(i, ResponseEnum.COMMON_SUCCESS);
     }
 
     /**
@@ -74,7 +80,7 @@ public class UserController {
      * @return 用户信息
      */
     @GetMapping("/current")
-    public User getCurrentUser(HttpServletRequest httpServletRequest) {
+    public BaseResponse<User> getCurrentUser(HttpServletRequest httpServletRequest) {
         Object userObj = httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUserInSession = (User) userObj;
         if (currentUserInSession == null) {
@@ -82,7 +88,8 @@ public class UserController {
         }
         long userId = currentUserInSession.getId();
         User userInDB = userService.getById(userId);
-        return userService.getSafetyUser(userInDB);
+        User safetyUser = userService.getSafetyUser(userInDB);
+        return new BaseResponse<>(safetyUser,ResponseEnum.COMMON_SUCCESS);
     }
 
 
@@ -94,12 +101,14 @@ public class UserController {
      * @return 脱敏用户信息列表
      */
     @GetMapping("/search")
-    public List<User> searchUser(String userAccount, HttpServletRequest httpServletRequest) {
+    public BaseResponse<List<User>> searchUser(String userAccount, HttpServletRequest httpServletRequest) {
         //仅管理员可查
         User  user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
-        if ( user == null || user.getUserRole() != ADMIN_ROLE) return new ArrayList<>();
+        if ( user == null || user.getUserRole() != ADMIN_ROLE)
+            return new BaseResponse<>(new ArrayList<>(), ResponseEnum.COMMON_SUCCESS);
 
-        return userService.searchUsers(userAccount);
+        List<User> userList = userService.searchUsers(userAccount);
+        return new BaseResponse<>(userList, ResponseEnum.COMMON_SUCCESS);
     }
 
     /**
@@ -110,14 +119,17 @@ public class UserController {
      * @return 删除是否成功
      */
     @PostMapping("/delete")
-    public boolean deleteUser(@RequestBody long id, HttpServletRequest httpServletRequest) {
+    public BaseResponse<Boolean> deleteUser(@RequestBody long id, HttpServletRequest httpServletRequest) {
         //仅管理员可删除
         User  user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
-        if ( user == null || user.getUserStatus() != ADMIN_ROLE) return false;
+        if ( user == null || user.getUserStatus() != ADMIN_ROLE)
+            return new BaseResponse<>(false, ResponseEnum.COMMON_SUCCESS);
         if (id <= 0) {
-            return false;
+            return new BaseResponse<>(false, ResponseEnum.COMMON_SUCCESS);
         }
-        return userService.deleteUserById(id);
+        boolean result = userService.deleteUserById(id);
+
+        return new BaseResponse<>(result, ResponseEnum.COMMON_SUCCESS);
     }
 
 
