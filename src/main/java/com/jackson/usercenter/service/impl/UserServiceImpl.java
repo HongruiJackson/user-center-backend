@@ -120,6 +120,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         //4. 用户脱敏
+        User anonymizedUser = getSafetyUser(user);
+
+        //5. 记录用户的登录态
+        request.getSession().setAttribute(USER_LOGIN_STATE, anonymizedUser);
+
+        return anonymizedUser;
+    }
+
+    /**
+     * 用户信息脱敏
+     * @param user 数据库用户信息
+     * @return 脱敏后的用户信息
+     */
+    public User getSafetyUser(User user) {
+        if (user == null) return null;
         User anonymizedUser = new User();
         anonymizedUser.setId(user.getId());
         anonymizedUser.setUserAccount(user.getUserAccount());
@@ -130,10 +145,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         anonymizedUser.setEmail(user.getEmail());
         anonymizedUser.setUserStatus(user.getUserStatus());
         anonymizedUser.setUserRole(user.getUserRole());
-
-        //5. 记录用户的登录态
-        request.getSession().setAttribute(USER_LOGIN_STATE, anonymizedUser);
-
         return anonymizedUser;
     }
 
