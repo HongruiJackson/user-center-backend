@@ -149,6 +149,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
+    public Integer userLogout(HttpServletRequest httpServletRequest) {
+        httpServletRequest.getSession().removeAttribute(USER_LOGIN_STATE);
+        return 1;
+    }
+
+    @Override
     public List<User> searchUsers(String userAccount) {
 
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();

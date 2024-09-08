@@ -25,7 +25,7 @@ public class UserController {
     /**
      * 用户注册功能
      * @param userRegisterRequest 用户注册请求体信息
-     * @return
+     * @return 注册情况
      */
     @PostMapping("/register")
     public Long userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
@@ -43,7 +43,7 @@ public class UserController {
      * 用户登录
      * @param userLoginRequest 用户登录请求体
      * @param httpServletRequest http请求，set Session的状态
-     * @return
+     * @return 用户脱敏信息
      */
     @PostMapping("/login")
     public User userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest httpServletRequest) {
@@ -56,10 +56,16 @@ public class UserController {
         return userService.userLogin(userAccount, userPassword, httpServletRequest);
     }
 
+    @PostMapping("/logOUt")
+    public Integer userLogOut(HttpServletRequest httpServletRequest) {
+        if (httpServletRequest == null) return null;
+        return userService.userLogout(httpServletRequest);
+    }
+
     /**
      * 获取用户登录态
      * @param httpServletRequest http请求
-     * @return
+     * @return 用户信息
      */
     @GetMapping("/current")
     public User getCurrentUser(HttpServletRequest httpServletRequest) {
@@ -79,7 +85,7 @@ public class UserController {
      * 允许管理员能够模糊查询用户
      * @param userAccount 要查询的用户
      * @param httpServletRequest http请求
-     * @return
+     * @return 脱敏用户信息列表
      */
     @GetMapping("/search")
     public List<User> searchUser(String userAccount, HttpServletRequest httpServletRequest) {
@@ -95,7 +101,7 @@ public class UserController {
      * 管理员能够根据id删除用户
      * @param id 用户id
      * @param httpServletRequest http请求体
-     * @return
+     * @return 删除是否成功
      */
     @PostMapping("/delete")
     public boolean deleteUser(@RequestBody long id, HttpServletRequest httpServletRequest) {
