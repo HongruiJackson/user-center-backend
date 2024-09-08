@@ -56,6 +56,12 @@ public class UserController {
         return userService.userLogin(userAccount, userPassword, httpServletRequest);
     }
 
+    /**
+     * 用户注销
+     * 移除session中的登录态
+     * @param httpServletRequest http请求 remove
+     * @return 无效值
+     */
     @PostMapping("/logOUt")
     public Integer userLogOut(HttpServletRequest httpServletRequest) {
         if (httpServletRequest == null) return null;
