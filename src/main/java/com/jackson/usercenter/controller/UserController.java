@@ -57,6 +57,24 @@ public class UserController {
     }
 
     /**
+     * 获取用户登录态
+     * @param httpServletRequest http请求
+     * @return
+     */
+    @GetMapping("/current")
+    public User getCurrentUser(HttpServletRequest httpServletRequest) {
+        Object userObj = httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUserInSession = (User) userObj;
+        if (currentUserInSession == null) {
+            return null;
+        }
+        long userId = currentUserInSession.getId();
+        User userInDB = userService.getById(userId);
+        return userService.getSafetyUser(userInDB);
+    }
+
+
+    /**
      * 查询用户
      * 允许管理员能够模糊查询用户
      * @param userAccount 要查询的用户
