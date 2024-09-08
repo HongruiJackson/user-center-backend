@@ -2,6 +2,8 @@ package com.jackson.usercenter.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.jackson.usercenter.enums.ErrorCode;
+import com.jackson.usercenter.exception.BusinessException;
 import com.jackson.usercenter.model.domain.User;
 import com.jackson.usercenter.service.UserService;
 import com.jackson.usercenter.mapper.UserMapper;
@@ -41,17 +43,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //1. 校验
         //1.1 非空校验
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword))
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
         //1.2 业务逻辑： 登录的账户不小于4位、
         if (userAccount.length() < 4)
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号小于4位");
         //1.3 业务逻辑： 登录的密码不小于8位
         if (userPassword.length() < 8 || checkPassword.length() < 8)
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户密码过短");
 
         //1.4 密码和校验密码是否相同
         if (!userPassword.equals(checkPassword))
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"两次密码不同");
 
         //1.5 账户不包含特殊字符
         String regEx = "[ _`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]|\n|\r|\t";
@@ -59,7 +61,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         Matcher matcher = pattern.matcher(userAccount);
         if (matcher.find()) {
             log.info("包含特殊符号");
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号含有特殊符号");
         }
 
         //1.6 账户不允许重复
@@ -67,7 +69,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("user_account", userAccount);
         Long count = userMapper.selectCount(queryWrapper);
         if (count > 0) {
-            return -1;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号重复");
         }
 
         //2. 密码加密
@@ -78,7 +80,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptedPassword);
         int insert = userMapper.insert(user);
-        if (insert != 1) return -1;
+        if (insert != 1) {
+            throw new BusinessException(ErrorCode.DB_ERROR,"检查数据库日志");
+        }
 
 
         return user.getId();
@@ -89,13 +93,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //1. 校验
         //1.1 非空校验
         if (StringUtils.isAnyBlank(userAccount, userPassword))
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"参数为空");
         //1.2 业务逻辑： 登录的账户不小于4位、
         if (userAccount.length() < 4)
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号小于4位");
         //1.3 业务逻辑： 登录的密码不小于8位
         if (userPassword.length() < 8)
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"用户密码过短");
 
         //1.4 账户不包含特殊字符
         String regEx = "[ _`~!@#$%^&*()+=|{}':;',\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。，、？]|\n|\r|\t";
@@ -103,7 +107,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         Matcher matcher = pattern.matcher(userAccount);
         if (matcher.find()) {
             log.info("包含特殊符号");
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR,"账号含有特殊符号");
         }
 
         //2. 密码加密
@@ -116,7 +120,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         //3.1 若用户不存在
         if (user == null) {
             log.info("login failed, user is not exited or wrong password");
-            return null;
+            throw new BusinessException(ErrorCode.NULL_ERROR,"用户不存在");
         }
 
         //4. 用户脱敏
@@ -134,7 +138,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      * @return 脱敏后的用户信息
      */
     public User getSafetyUser(User user) {
-        if (user == null) return null;
+        if (user == null) throw new BusinessException(ErrorCode.NULL_ERROR,"用户不存在");;
         User anonymizedUser = new User();
         anonymizedUser.setId(user.getId());
         anonymizedUser.setUserAccount(user.getUserAccount());

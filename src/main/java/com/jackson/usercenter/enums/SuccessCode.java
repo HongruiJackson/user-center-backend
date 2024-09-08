@@ -3,7 +3,7 @@ package com.jackson.usercenter.enums;
 /**
  * 通用的响应的code、message封装
  */
-public enum ResponseEnum {
+public enum SuccessCode {
 
     COMMON_SUCCESS(0,"ok"),
 
@@ -12,7 +12,7 @@ public enum ResponseEnum {
 
     public final String message;
 
-    ResponseEnum(int code, String message) {
+    SuccessCode(int code, String message) {
         this.code = code;
         this.message = message;
     }

@@ -1,6 +1,7 @@
 package com.jackson.usercenter.common;
 
-import com.jackson.usercenter.enums.ResponseEnum;
+import com.jackson.usercenter.enums.ErrorCode;
+import com.jackson.usercenter.enums.SuccessCode;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -14,16 +15,21 @@ public class BaseResponse<T> implements Serializable {
 
     private String message; // 请求信息
 
-    public BaseResponse(int code, T data, String message) {
+    private String description; // 如果有错误，对于错误的详细描述
+
+    public BaseResponse(int code, T data, String message, String description) {
         this.code = code;
         this.data = data;
         this.message = message;
+        this.description = description;
     }
 
-    public BaseResponse(T data, ResponseEnum responseEnum) {
-        this.data = data;
-        this.code = responseEnum.code;
-        this.message = responseEnum.message;
+    public BaseResponse(T data, SuccessCode successCode) {
+        this(successCode.code,data,successCode.message,"");
+    }
+
+    public BaseResponse(ErrorCode errorCode) {
+        this(errorCode.code,null,errorCode.message,errorCode.message);
     }
 
 }

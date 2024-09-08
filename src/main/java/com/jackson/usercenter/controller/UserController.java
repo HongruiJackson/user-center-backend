@@ -1,11 +1,14 @@
 package com.jackson.usercenter.controller;
 
 import com.jackson.usercenter.common.BaseResponse;
-import com.jackson.usercenter.enums.ResponseEnum;
+import com.jackson.usercenter.enums.ErrorCode;
+import com.jackson.usercenter.enums.SuccessCode;
+import com.jackson.usercenter.exception.BusinessException;
 import com.jackson.usercenter.model.domain.User;
 import com.jackson.usercenter.model.request.UserLoginRequest;
 import com.jackson.usercenter.model.request.UserRegisterRequest;
 import com.jackson.usercenter.service.UserService;
+import com.jackson.usercenter.utils.ResultUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,15 +34,17 @@ public class UserController {
      */
     @PostMapping("/register")
     public BaseResponse<Long> userRegister(@RequestBody UserRegisterRequest userRegisterRequest) {
-        if (userRegisterRequest == null) return null;
+        if (userRegisterRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
+        }
         String userAccount = userRegisterRequest.getUserAccount();
         String userPassword = userRegisterRequest.getUserPassword();
         String checkPassword = userRegisterRequest.getCheckPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         long result = userService.userRegister(userAccount, userPassword, checkPassword);
-        return new BaseResponse<>(result, ResponseEnum.COMMON_SUCCESS);
+        return ResultUtils.success(result, SuccessCode.COMMON_SUCCESS);
     }
 
     /**
@@ -50,14 +55,14 @@ public class UserController {
      */
     @PostMapping("/login")
     public BaseResponse<User> userLogin(@RequestBody UserLoginRequest userLoginRequest, HttpServletRequest httpServletRequest) {
-        if (userLoginRequest == null) return null;
+        if (userLoginRequest == null) throw new BusinessException(ErrorCode.PARAMS_ERROR);
         String userAccount = userLoginRequest.getUserAccount();
         String userPassword = userLoginRequest.getUserPassword();
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            return null;
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         User user = userService.userLogin(userAccount, userPassword, httpServletRequest);
-        return new BaseResponse<>(user, ResponseEnum.COMMON_SUCCESS);
+        return ResultUtils.success(user, SuccessCode.COMMON_SUCCESS);
 
     }
 
@@ -69,9 +74,9 @@ public class UserController {
      */
     @PostMapping("/logOUt")
     public BaseResponse<Integer> userLogOut(HttpServletRequest httpServletRequest) {
-        if (httpServletRequest == null) return null;
+        if (httpServletRequest == null) throw new BusinessException(ErrorCode.PARAMS_ERROR);
         Integer i = userService.userLogout(httpServletRequest);
-        return new BaseResponse<>(i, ResponseEnum.COMMON_SUCCESS);
+        return ResultUtils.success(i, SuccessCode.COMMON_SUCCESS);
     }
 
     /**
@@ -84,12 +89,12 @@ public class UserController {
         Object userObj = httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
         User currentUserInSession = (User) userObj;
         if (currentUserInSession == null) {
-            return null;
+            throw new BusinessException(ErrorCode.NULL_ERROR,"当前用户session未知");
         }
         long userId = currentUserInSession.getId();
         User userInDB = userService.getById(userId);
         User safetyUser = userService.getSafetyUser(userInDB);
-        return new BaseResponse<>(safetyUser,ResponseEnum.COMMON_SUCCESS);
+        return ResultUtils.success(safetyUser, SuccessCode.COMMON_SUCCESS);
     }
 
 
@@ -105,10 +110,10 @@ public class UserController {
         //仅管理员可查
         User  user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
         if ( user == null || user.getUserRole() != ADMIN_ROLE)
-            return new BaseResponse<>(new ArrayList<>(), ResponseEnum.COMMON_SUCCESS);
+            throw new BusinessException(ErrorCode.NO_AUTH);
 
         List<User> userList = userService.searchUsers(userAccount);
-        return new BaseResponse<>(userList, ResponseEnum.COMMON_SUCCESS);
+        return ResultUtils.success(userList, SuccessCode.COMMON_SUCCESS);
     }
 
     /**
@@ -123,13 +128,13 @@ public class UserController {
         //仅管理员可删除
         User  user = (User) httpServletRequest.getSession().getAttribute(USER_LOGIN_STATE);
         if ( user == null || user.getUserStatus() != ADMIN_ROLE)
-            return new BaseResponse<>(false, ResponseEnum.COMMON_SUCCESS);
+            throw new BusinessException(ErrorCode.NO_AUTH);
         if (id <= 0) {
-            return new BaseResponse<>(false, ResponseEnum.COMMON_SUCCESS);
+            throw new BusinessException(ErrorCode.PARAMS_ERROR);
         }
         boolean result = userService.deleteUserById(id);
 
-        return new BaseResponse<>(result, ResponseEnum.COMMON_SUCCESS);
+        return ResultUtils.success(result, SuccessCode.COMMON_SUCCESS);
     }
 
 
